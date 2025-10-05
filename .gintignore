@@ -1,2 +1,4 @@
 ./TwilioData
 ./CLAUDE.md
+./docs
+./docs/*
