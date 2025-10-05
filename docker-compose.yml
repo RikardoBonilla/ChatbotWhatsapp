@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # PHP 8.3 FPM Application
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: chatbot_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - chatbot_network
+    depends_on:
+      - mysql
+      - redis
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: chatbot_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d/
+    networks:
+      - chatbot_network
+    depends_on:
+      - app
+
+  # MySQL 8 Database
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: chatbot_whatsapp
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: secret
+      MYSQL_USER: laravel
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - chatbot_network
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7.2-alpine
+    container_name: chatbot_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - chatbot_network
+
+# Networks
+networks:
+  chatbot_network:
+    driver: bridge
+
+# Volumes
+volumes:
+  mysql_data:
+    driver: local
