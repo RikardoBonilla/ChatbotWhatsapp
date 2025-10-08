@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\WhatsApp\Providers;
 
+use App\Domain\WhatsApp\Repositories\IncomingMessageRepositoryInterface;
+use App\Domain\WhatsApp\Repositories\KeywordRuleRepositoryInterface;
 use App\Domain\WhatsApp\Repositories\MessageRepositoryInterface;
+use App\Domain\WhatsApp\Services\KeywordMatcherInterface;
 use App\Domain\WhatsApp\Services\WhatsAppServiceInterface;
+use App\Infrastructure\WhatsApp\Repositories\EloquentIncomingMessageRepository;
+use App\Infrastructure\WhatsApp\Repositories\EloquentKeywordRuleRepository;
 use App\Infrastructure\WhatsApp\Repositories\EloquentMessageRepository;
+use App\Infrastructure\WhatsApp\Services\SimpleKeywordMatcher;
 use App\Infrastructure\WhatsApp\Services\TwilioWhatsAppService;
 use Illuminate\Support\ServiceProvider;
 use Twilio\Rest\Client;
@@ -41,6 +47,21 @@ final class WhatsAppServiceProvider extends ServiceProvider
         $this->app->bind(
             MessageRepositoryInterface::class,
             EloquentMessageRepository::class
+        );
+
+        $this->app->bind(
+            IncomingMessageRepositoryInterface::class,
+            EloquentIncomingMessageRepository::class
+        );
+
+        $this->app->bind(
+            KeywordRuleRepositoryInterface::class,
+            EloquentKeywordRuleRepository::class
+        );
+
+        $this->app->bind(
+            KeywordMatcherInterface::class,
+            SimpleKeywordMatcher::class
         );
     }
 
