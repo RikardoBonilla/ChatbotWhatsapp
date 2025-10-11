@@ -16,10 +16,13 @@ final readonly class EloquentKeywordRuleRepository implements KeywordRuleReposit
         KeywordRuleModel::updateOrCreate(
             ['id' => $rule->getId()->getValue()],
             [
-                'keyword' => $rule->getKeyword(),
+                'keywords' => $rule->getKeywords(),
                 'response_template' => $rule->getResponseTemplate(),
                 'is_active' => $rule->isActive(),
                 'priority' => $rule->getPriority(),
+                'fuzzy_match' => $rule->getFuzzyMatch(),
+                'trigger_type' => $rule->getTriggerType(),
+                'variables' => $rule->getVariables(),
             ]
         );
     }
@@ -52,7 +55,7 @@ final readonly class EloquentKeywordRuleRepository implements KeywordRuleReposit
 
     public function findByKeyword(string $keyword): array
     {
-        $models = KeywordRuleModel::where('keyword', 'LIKE', "%{$keyword}%")
+        $models = KeywordRuleModel::where('keywords', 'LIKE', "%{$keyword}%")
             ->orderBy('priority', 'desc')
             ->get();
 
@@ -68,9 +71,12 @@ final readonly class EloquentKeywordRuleRepository implements KeywordRuleReposit
     {
         $rule = KeywordRule::create(
             MessageId::fromString($model->id),
-            $model->keyword,
+            $model->keywords ?? [$model->keyword ?? ''],
             $model->response_template,
-            $model->priority
+            $model->priority,
+            $model->fuzzy_match ?? false,
+            $model->trigger_type ?? 'contains',
+            $model->variables
         );
 
         if (!$model->is_active) {

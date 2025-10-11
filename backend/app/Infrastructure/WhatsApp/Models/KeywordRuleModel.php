@@ -14,14 +14,20 @@ final class KeywordRuleModel extends Model
     protected $table = 'keyword_rules';
 
     protected $fillable = [
-        'keyword',
+        'keywords',
         'response_template',
         'is_active',
         'priority',
+        'fuzzy_match',
+        'trigger_type',
+        'variables',
     ];
 
     protected $casts = [
+        'keywords' => 'array',
         'is_active' => 'boolean',
         'priority' => 'integer',
+        'fuzzy_match' => 'boolean',
+        'variables' => 'array',
     ];
 }

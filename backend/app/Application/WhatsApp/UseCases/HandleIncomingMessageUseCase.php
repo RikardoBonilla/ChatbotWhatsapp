@@ -10,7 +10,9 @@ use App\Application\WhatsApp\Results\HandleIncomingMessageResult;
 use App\Domain\WhatsApp\Entities\IncomingMessage;
 use App\Domain\WhatsApp\Repositories\IncomingMessageRepositoryInterface;
 use App\Domain\WhatsApp\Repositories\KeywordRuleRepositoryInterface;
+use App\Domain\WhatsApp\Services\ConversationTrackerInterface;
 use App\Domain\WhatsApp\Services\KeywordMatcherInterface;
+use App\Domain\WhatsApp\Services\TemplateEngineInterface;
 use App\Domain\WhatsApp\ValueObjects\MessageId;
 use App\Domain\WhatsApp\ValueObjects\PhoneNumber;
 use App\Domain\WhatsApp\ValueObjects\TwilioSid;
@@ -21,6 +23,8 @@ final readonly class HandleIncomingMessageUseCase
         private IncomingMessageRepositoryInterface $incomingRepository,
         private KeywordRuleRepositoryInterface $keywordRepository,
         private KeywordMatcherInterface $keywordMatcher,
+        private ConversationTrackerInterface $conversationTracker,
+        private TemplateEngineInterface $templateEngine,
         private SendWhatsAppMessageUseCase $sendMessageUseCase,
     ) {}
 
@@ -47,11 +51,18 @@ final readonly class HandleIncomingMessageUseCase
 
             if (!empty($matchingRules)) {
                 $bestRule = $this->selectBestRule($matchingRules);
+                $phoneNumber = PhoneNumber::fromString($dto->fromPhone);
+
+                $renderedResponse = $this->templateEngine->renderWithContext(
+                    $bestRule->getResponseTemplate(),
+                    $phoneNumber,
+                    ['phone' => $dto->fromPhone]
+                );
 
                 $sendResult = $this->sendMessageUseCase->execute(
                     new SendMessageDTO(
                         $dto->fromPhone,
-                        $bestRule->getResponseTemplate()
+                        $renderedResponse
                     )
                 );
 
